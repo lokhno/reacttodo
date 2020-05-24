@@ -11,5 +11,7 @@ firebase.initializeApp({
 });
 
 var db = firebase.firestore();
+var auth = firebase.auth();
 
-export { db };
+
+export { db, auth };

@@ -1,36 +1,49 @@
-import React, { useEffect, useState } from "react";
-import { Switch, Route } from "react-router-dom";
-
-import { get } from "./api";
+import React, { useReducer, useContext, useEffect, useMemo } from "react";
+import { Switch, Route, Redirect } from "react-router-dom";
 
 import "./App.scss";
 
-import DBContext from "./context/db";
-
 import AppDrawer from "./AppDrawer";
 import AppContent from "./AppContent";
-import TodoList from "./TodoList";
+import TodoList from "./pages/TodoList";
+import { reducer, initialState, actions } from "./store";
+import LoginPage from "./pages/Login";
+import DataContext from "./context/data";
 
 function App() {
-    const [lists, setLists] = useState([]);
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    const contextValue = useMemo(() => {
+        return { state, dispatch };
+    }, [state, dispatch]);
 
     useEffect(() => {
-        get("lists")().then(setLists);
-        //get("todos").then(setTodos);
+        actions.setAuth(dispatch);
+        actions.getLists(dispatch);
     }, []);
 
+    if(!state.user) {
+        return <LoginPage />
+    } 
+
+
     return (
-        <DBContext.Provider value={{lists, get}}>
+        <DataContext.Provider value={contextValue}>
+            <Route exact path="/login">
+              
+            </Route>
             <div className="app">
-                <AppDrawer lists={lists} />
+                <AppDrawer lists={state.lists} />
 
                 <AppContent>
                     <Switch>
+                        <Route exact path="/login" component={LoginPage} />
+                        <Route exact path="/" component={TodoList} />
                         <Route path="/:listId" component={TodoList} />
                     </Switch>
                 </AppContent>
             </div>
-        </DBContext.Provider>
+        </DataContext.Provider>
     );
 }
 
